@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "platform": "android",
+  "app": {
+    "name": "Website App",
+    "applicationId": "com.example.websiteapp",
+    "versionName": "1.0.0",
+    "versionCode": 1,
+    "startUrl": "https://example.com/"
+  },
+  "navigation": {
+    "allowedHosts": ["example.com"],
+    "allowSubdomains": false,
+    "externalLinks": "block"
+  },
+  "appearance": {
+    "orientation": "portrait"
+  },
+  "features": {
+    "backNavigation": true,
+    "loadingIndicator": true,
+    "offlineScreen": true,
+    "pullToRefresh": false
+  }
+}

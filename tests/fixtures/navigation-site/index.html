@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Navigation test fixture</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; line-height: 1.45; }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    p.lead { margin: 0 0 16px; color: #555; }
+    ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+    li { border: 1px solid #ccc; border-radius: 10px; padding: 10px 12px; }
+    li b { display: block; }
+    small { color: #666; }
+    .ok { border-left: 5px solid #2a9d4b; }
+    .block { border-left: 5px solid #d33; }
+    .info { border-left: 5px solid #d99a00; }
+    button, input[type=submit] { font: inherit; padding: 6px 12px; }
+    iframe { width: 100%; height: 90px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>Navigation test fixture</h1>
+  <p class="lead">
+    Host this page over HTTPS, build an app with its URL as the start URL (defaults), then tap each item.
+    <br />Current host: <code id="host"></code>. Set the query string <code>?other=https://example.org</code> to change the "other host".
+  </p>
+
+  <ul>
+    <li class="ok"><b>1. Same host, same page path</b>
+      <a href="page2.html">Open page2.html</a> <small>Expected: opens in the app.</small></li>
+
+    <li class="block"><b>2. Different host</b>
+      <a id="other" href="https://example.org/">Open example.org</a> <small>Expected: blocked (toast), stays here.</small></li>
+
+    <li class="block"><b>3. Lookalike host</b>
+      <a id="lookalike" href="#">Open &lt;this-host&gt;.attacker.test</a> <small>Expected: blocked.</small></li>
+
+    <li class="block"><b>4. Plain HTTP, same host</b>
+      <a id="http" href="#">Open http://&lt;this-host&gt;/</a> <small>Expected: blocked (not HTTPS).</small></li>
+
+    <li class="block"><b>5. Redirect to another host</b>
+      <a href="/redirect-out">Open /redirect-out (302 to example.org)</a>
+      <small>Expected: the final off-host page is not displayed; a blocked page or toast appears.</small></li>
+
+    <li class="ok"><b>6. Same-host redirect</b>
+      <a href="/redirect-same">Open /redirect-same (302 to page2.html)</a> <small>Expected: opens page2.html in the app.</small></li>
+
+    <li class="block"><b>7. target="_blank"</b>
+      <a href="page2.html" target="_blank" rel="noopener">Same-host link, new window</a> |
+      <a href="https://example.org/" target="_blank" rel="noopener">Other-host link, new window</a>
+      <small>Expected: nothing opens (popups are suppressed).</small></li>
+
+    <li class="block"><b>8. window.open()</b>
+      <button type="button" id="open-popup">window.open(page2.html)</button> <small>Expected: nothing opens.</small></li>
+
+    <li class="block"><b>9. JavaScript navigation to another host</b>
+      <button type="button" id="js-nav">location.href = other host</button> <small>Expected: blocked.</small></li>
+
+    <li class="ok"><b>10. JavaScript navigation on the same host</b>
+      <button type="button" id="js-nav-same">location.href = page2.html</button> <small>Expected: opens page2.html.</small></li>
+
+    <li class="ok"><b>11. SPA-style navigation</b>
+      <button type="button" id="spa">history.pushState('/spa-route')</button> <small>Expected: URL changes, page stays; no blocking.</small></li>
+
+    <li class="ok"><b>12. Form POST to the same host</b>
+      <form method="post" action="/echo"><input type="text" name="q" value="hello" /> <input type="submit" value="POST /echo" /></form>
+      <small>Expected: shows the echo page.</small></li>
+
+    <li class="info"><b>13. Form POST to another host (known limitation)</b>
+      <form method="post" id="post-out" action="https://example.org/"><input type="submit" value="POST to other host" /></form>
+      <small>shouldOverrideUrlLoading is never called for POST. The generated app additionally checks main-frame requests in
+        shouldInterceptRequest and shows a "Link blocked" page, but this is best effort, not a security boundary.</small></li>
+
+    <li class="block"><b>14. Non-web schemes</b>
+      <a href="intent://scan/#Intent;scheme=zxing;end">intent:</a> |
+      <a href="market://details?id=com.android.chrome">market:</a> |
+      <a href="mailto:someone@example.com">mailto:</a> |
+      <a href="javascript:void(0)">javascript:</a>
+      <small>Expected: blocked / ignored; no other app is launched.</small></li>
+
+    <li class="ok"><b>15. Subframe from another host</b>
+      <iframe id="frame" title="Other host in an iframe"></iframe>
+      <small>Policy applies to top-level navigation only; subresources and frames are not filtered.</small></li>
+  </ul>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const other = params.get("other") || "https://example.org/";
+    document.getElementById("host").textContent = location.host;
+    document.getElementById("other").href = other;
+    document.getElementById("lookalike").href = `https://${location.hostname}.attacker.test/`;
+    document.getElementById("http").href = `http://${location.host}/`;
+    document.getElementById("post-out").action = other;
+    document.getElementById("frame").src = other;
+    document.getElementById("open-popup").onclick = () => window.open("page2.html");
+    document.getElementById("js-nav").onclick = () => { location.href = other; };
+    document.getElementById("js-nav-same").onclick = () => { location.href = "page2.html"; };
+    document.getElementById("spa").onclick = () => {
+      history.pushState({}, "", "/spa-route");
+      document.title = "SPA route " + new Date().toLocaleTimeString();
+    };
+  </script>
+</body>
+</html>

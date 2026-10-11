@@ -1,0 +1,33 @@
+{
+  "name": "website-to-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Self-hosted generator that wraps an HTTPS website into a debug-signed Android APK.",
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check-env": "node scripts/check-environment.mjs",
+    "build:template": "node scripts/build-template.mjs",
+    "fixture": "node scripts/serve-fixture.mjs"
+  },
+  "dependencies": {
+    "next": "16.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "sharp": "0.35.5",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "5.9.3",
+    "vitest": "5.0.3"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

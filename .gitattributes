@@ -1,0 +1,6 @@
+* text=auto
+# The wrapper scripts must keep their line endings regardless of the checkout platform.
+templates/android/gradlew text eol=lf
+templates/android/gradlew.bat text eol=crlf
+*.jar binary
+*.png binary

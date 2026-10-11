@@ -1,0 +1,108 @@
+.panel {
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.ok summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+.ok summary::-webkit-details-marker {
+  display: none;
+}
+
+.ok summary small {
+  margin-left: auto;
+  font-weight: 400;
+  color: var(--text-faint);
+}
+
+.badge {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 3px var(--success-soft);
+}
+
+.list {
+  margin: 12px 0 8px;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.detail {
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.warn {
+  border-color: rgba(245, 185, 66, 0.45);
+  background: var(--warning-soft);
+}
+
+.heading {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.text {
+  color: var(--text-muted);
+}
+
+.problems {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fix {
+  display: block;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.button {
+  align-self: flex-start;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-3);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}

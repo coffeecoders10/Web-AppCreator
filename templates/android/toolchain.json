@@ -1,0 +1,10 @@
+{
+  "gradle": "8.14.6",
+  "androidGradlePlugin": "8.13.2",
+  "kotlin": "2.3.21",
+  "compileSdk": 35,
+  "targetSdk": 35,
+  "minSdk": 24,
+  "buildTools": "35.0.0",
+  "jdk": { "min": 17, "max": 21, "tested": 17 }
+}

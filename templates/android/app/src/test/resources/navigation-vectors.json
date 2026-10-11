@@ -1,0 +1,108 @@
+{
+  "_comment": "Shared by the Kotlin unit tests (NavigationPolicyTest) and the Vitest suite (tests/navigation-policy.test.ts). Keep both implementations in agreement.",
+  "suites": [
+    {
+      "name": "defaults: exact start host over HTTPS",
+      "rules": {
+        "startUrl": "https://reader.example.com",
+        "allowedHosts": ["reader.example.com"],
+        "allowSubdomains": false
+      },
+      "cases": [
+        { "url": "https://reader.example.com", "reason": "allowed" },
+        { "url": "https://reader.example.com/", "reason": "allowed" },
+        { "url": "https://reader.example.com/books", "reason": "allowed" },
+        { "url": "https://reader.example.com/profile?tab=1#section", "reason": "allowed" },
+        { "url": "https://READER.Example.COM/Books", "reason": "allowed" },
+        { "url": "HTTPS://reader.example.com/x", "reason": "allowed" },
+        { "url": "https://reader.example.com./x", "reason": "allowed" },
+        { "url": "https://reader.example.com:443/x", "reason": "allowed" },
+        { "url": "https://reader.example.com:8443/x", "reason": "port-not-allowed" },
+        { "url": "http://reader.example.com", "reason": "not-https" },
+        { "url": "http://reader.example.com/books", "reason": "not-https" },
+        { "url": "https://example.com", "reason": "host-not-allowed" },
+        { "url": "https://api.reader.example.com", "reason": "host-not-allowed" },
+        { "url": "https://reader.example.com.attacker.test", "reason": "host-not-allowed" },
+        { "url": "https://attacker.test/?next=reader.example.com", "reason": "host-not-allowed" },
+        { "url": "https://attacker.test/#reader.example.com", "reason": "host-not-allowed" },
+        { "url": "https://attacker.test/reader.example.com", "reason": "host-not-allowed" },
+        { "url": "https://xreader.example.com", "reason": "host-not-allowed" },
+        { "url": "https://reader.example.com@attacker.test/", "reason": "credentials-in-url" },
+        { "url": "https://attacker.test@reader.example.com/", "reason": "credentials-in-url" },
+        { "url": "https://reader.example.com:443@attacker.test/", "reason": "credentials-in-url" },
+        { "url": "https://reader.example.com\\@attacker.test/", "reason": "invalid-url" },
+        { "url": "https://reader.example.com/a b", "reason": "invalid-url" },
+        { "url": "javascript:alert(1)", "reason": "unsupported-scheme" },
+        { "url": "intent://scan/#Intent;scheme=zxing;end", "reason": "unsupported-scheme" },
+        { "url": "file:///sdcard/page.html", "reason": "unsupported-scheme" },
+        { "url": "content://com.example.provider/file", "reason": "unsupported-scheme" },
+        { "url": "market://details?id=com.example", "reason": "unsupported-scheme" },
+        { "url": "mailto:someone@example.com", "reason": "unsupported-scheme" },
+        { "url": "data:text/html,<h1>hi</h1>", "reason": "unsupported-scheme" },
+        { "url": "about:blank", "reason": "unsupported-scheme" },
+        { "url": "", "reason": "invalid-url" },
+        { "url": "reader.example.com", "reason": "invalid-url" },
+        { "url": "//reader.example.com/x", "reason": "invalid-url" }
+      ]
+    },
+    {
+      "name": "subdomains enabled: dot-delimited suffix match",
+      "rules": {
+        "startUrl": "https://reader.example.com",
+        "allowedHosts": ["reader.example.com", "example.com"],
+        "allowSubdomains": true
+      },
+      "cases": [
+        { "url": "https://example.com/", "reason": "allowed" },
+        { "url": "https://child.example.com/", "reason": "allowed" },
+        { "url": "https://a.b.example.com/", "reason": "allowed" },
+        { "url": "https://reader.example.com/", "reason": "allowed" },
+        { "url": "https://fakeexample.com/", "reason": "host-not-allowed" },
+        { "url": "https://notexample.com/", "reason": "host-not-allowed" },
+        { "url": "https://example.com.attacker.test/", "reason": "host-not-allowed" },
+        { "url": "https://example.org/", "reason": "host-not-allowed" },
+        { "url": "http://child.example.com/", "reason": "not-https" }
+      ]
+    },
+    {
+      "name": "several explicit hosts, no subdomains",
+      "rules": {
+        "startUrl": "https://reader.example.com",
+        "allowedHosts": ["reader.example.com", "auth.example.org"],
+        "allowSubdomains": false
+      },
+      "cases": [
+        { "url": "https://auth.example.org/login", "reason": "allowed" },
+        { "url": "https://reader.example.com/", "reason": "allowed" },
+        { "url": "https://sub.auth.example.org/", "reason": "host-not-allowed" },
+        { "url": "https://auth.example.org.attacker.test/", "reason": "host-not-allowed" },
+        { "url": "https://example.org/", "reason": "host-not-allowed" }
+      ]
+    },
+    {
+      "name": "start URL on a custom port",
+      "rules": {
+        "startUrl": "https://dev.example.com:8443/app",
+        "allowedHosts": ["dev.example.com"],
+        "allowSubdomains": false
+      },
+      "cases": [
+        { "url": "https://dev.example.com:8443/x", "reason": "allowed" },
+        { "url": "https://dev.example.com/x", "reason": "allowed" },
+        { "url": "https://dev.example.com:9000/x", "reason": "port-not-allowed" }
+      ]
+    },
+    {
+      "name": "internationalized host names compare as punycode",
+      "rules": {
+        "startUrl": "https://xn--bcher-kva.example/",
+        "allowedHosts": ["bücher.example"],
+        "allowSubdomains": false
+      },
+      "cases": [
+        { "url": "https://xn--bcher-kva.example/seite", "reason": "allowed" },
+        { "url": "https://xn--mnchen-3ya.example/seite", "reason": "host-not-allowed" }
+      ]
+    }
+  ]
+}
