@@ -36,6 +36,7 @@ export interface ArtifactMeta {
 export interface BuildContext {
   config: AppConfig;
   iconPng: Buffer | null;
+  iconBackground: string | null;
   workDir: string;
   artifactDir: string;
   setStage(stage: BuildStage, statusText: string): void;
@@ -135,10 +136,34 @@ async function prepareWorkspace(ctx: BuildContext, env: EnvironmentReport): Prom
   await rm(path.join(res, "mipmap-anydpi-v26"), { recursive: true, force: true });
   await rm(path.join(res, "drawable", "ic_launcher_foreground.xml"), { force: true });
   await rm(path.join(res, "values", "ic_launcher_background.xml"), { force: true });
-  for (const file of await buildLauncherIcons(ctx.iconPng, config.app.name)) {
+  for (const file of await buildLauncherIcons(ctx.iconPng, config.app.name, ctx.iconBackground)) {
     const target = path.join(res, file.path);
     await mkdir(path.dirname(target), { recursive: true });
     await writeFile(target, file.content);
+  }
+
+  // 6. A chosen icon background colour also paints the status bar, navigation bar and the area behind them.
+  if (ctx.iconPng && ctx.iconBackground) await applySystemBarColor(res, ctx.iconBackground);
+}
+
+/** Adds the colour to both theme variants, with light or dark bar icons picked for contrast. */
+async function applySystemBarColor(res: string, hex: string): Promise<void> {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const lightBackground = (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6;
+  const items = [
+    `<item name="android:colorBackground">${hex}</item>`,
+    `<item name="android:statusBarColor">${hex}</item>`,
+    `<item name="android:navigationBarColor">${hex}</item>`,
+    `<item name="android:windowLightNavigationBar">${lightBackground}</item>`,
+  ].join("\n        ");
+  for (const dir of ["values", "values-night"]) {
+    const file = path.join(res, dir, "themes.xml");
+    const xml = await readFile(file, "utf-8");
+    const patched = xml
+      .replace(/(<item name="android:windowLightStatusBar">)[^<]*(<\/item>)/, `$1${lightBackground}$2`)
+      .replace("</style>", `    ${items}\n    </style>`);
+    if (patched === xml) throw new BuildError("The template theme could not be updated with the icon colour.");
+    await writeFile(file, patched, "utf-8");
   }
 }
 

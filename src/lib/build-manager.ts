@@ -34,6 +34,7 @@ interface Job {
   artifact: ArtifactMeta | null;
   config: AppConfig;
   iconPng: Buffer | null;
+  iconBackground: string | null;
 }
 
 function numberFromEnv(name: string, fallback: number, min: number): number {
@@ -87,7 +88,7 @@ export class BuildManager {
   }
 
   /** Queues a build, or throws a 429 UserInputError when the queue is full. */
-  async enqueue(config: AppConfig, iconPng: Buffer | null): Promise<string> {
+  async enqueue(config: AppConfig, iconPng: Buffer | null, iconBackground: string | null = null): Promise<string> {
     await this.init();
     const waiting = this.queue.length;
     if (this.running !== null && waiting >= this.maxQueued) {
@@ -110,6 +111,7 @@ export class BuildManager {
       artifact: null,
       config,
       iconPng,
+      iconBackground,
     };
     this.jobs.set(job.id, job);
     this.queue.push(job.id);
@@ -160,6 +162,7 @@ export class BuildManager {
       const artifact = await buildAndroidApk({
         config: job.config,
         iconPng: job.iconPng,
+        iconBackground: job.iconBackground,
         workDir,
         artifactDir,
         setStage: (stage, text) => this.setStage(job, stage, text),

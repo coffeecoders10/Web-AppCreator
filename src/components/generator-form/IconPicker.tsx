@@ -6,17 +6,20 @@ interface IconPickerProps {
   fileName: string | null;
   fallbackLetter: string;
   error?: string;
+  /** "#RRGGBB" shown behind the artwork (the icon's negative space), or null for automatic. */
+  background: string | null;
+  onBackgroundChange: (color: string | null) => void;
   disabled?: boolean;
   onPick: (file: File) => void;
   onClear: () => void;
 }
 
-export function IconPicker({ previewUrl, fileName, fallbackLetter, error, disabled, onPick, onClear }: IconPickerProps) {
+export function IconPicker({ previewUrl, fileName, fallbackLetter, error, background, onBackgroundChange, disabled, onPick, onClear }: IconPickerProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
     <div className={styles.picker}>
-      <div className={styles.preview} aria-hidden="true">
+      <div className={styles.preview} aria-hidden="true" style={background && previewUrl ? { background } : undefined}>
         {previewUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- a local blob: preview, nothing to optimise
           <img src={previewUrl} alt="" className={styles.image} />
@@ -28,7 +31,7 @@ export function IconPicker({ previewUrl, fileName, fallbackLetter, error, disabl
         <p className={styles.title}>{fileName ?? "Default icon"}</p>
         <p className={styles.note} id="icon-note">
           {fileName
-            ? "Scaled to every Android density on this machine."
+            ? "Scaled to every Android density on this machine. The background colour fills the space around your artwork on the launcher."
             : "A letter on a coloured square is generated from the app name. Upload a square PNG (192 px or larger) to use your own."}
         </p>
         {error && (
@@ -46,6 +49,21 @@ export function IconPicker({ previewUrl, fileName, fallbackLetter, error, disabl
             </button>
           )}
         </div>
+        {fileName && (
+          <div className={styles.background}>
+            <label htmlFor="iconBackground">Background colour</label>
+            <input
+              id="iconBackground"
+              type="color"
+              value={background ?? "#ffffff"}
+              disabled={disabled}
+              onChange={(event) => onBackgroundChange(event.target.value.toUpperCase())}
+            />
+            <button type="button" className={styles.link} disabled={disabled || background === null} onClick={() => onBackgroundChange(null)}>
+              {background === null ? "Automatic" : "Use automatic"}
+            </button>
+          </div>
+        )}
         <input
           ref={inputRef}
           id="icon"

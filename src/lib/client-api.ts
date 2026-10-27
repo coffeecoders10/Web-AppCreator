@@ -30,10 +30,11 @@ export async function fetchEnvironment(signal?: AbortSignal): Promise<Environmen
   return readJson<EnvironmentStatus>(await fetch("/api/environment", { cache: "no-store", signal }));
 }
 
-export async function startBuild(configJson: string, icon: File | null): Promise<{ id: string }> {
+export async function startBuild(configJson: string, icon: File | null, iconBackground: string | null = null): Promise<{ id: string }> {
   const form = new FormData();
   form.set("config", configJson);
   if (icon) form.set("icon", icon);
+  if (icon && iconBackground) form.set("iconBackground", iconBackground);
   return readJson<{ id: string }>(await fetch("/api/builds", { method: "POST", body: form }));
 }
 

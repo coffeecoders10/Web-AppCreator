@@ -21,6 +21,8 @@ import styles from "./GeneratorForm.module.css";
 export interface FormSubmission {
   config: AppConfig;
   icon: File | null;
+  /** "#RRGGBB" behind the icon artwork, or null to pick it automatically from the image. */
+  iconBackground: string | null;
 }
 
 interface GeneratorFormProps {
@@ -76,6 +78,7 @@ export function GeneratorForm({ busy, blockedReason, serverErrors, onSubmit }: G
   const [submitted, setSubmitted] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [icon, setIcon] = useState<{ file: File; url: string } | null>(null);
+  const [iconBackground, setIconBackground] = useState<string | null>(null);
   const [iconError, setIconError] = useState<string | undefined>();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -144,7 +147,7 @@ export function GeneratorForm({ busy, blockedReason, serverErrors, onSubmit }: G
       requestAnimationFrame(() => formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
       return;
     }
-    onSubmit({ config: result.config, icon: icon?.file ?? null });
+    onSubmit({ config: result.config, icon: icon?.file ?? null, iconBackground: icon ? iconBackground : null });
   };
 
   const urlError = errorFor("startUrl");
@@ -251,9 +254,12 @@ export function GeneratorForm({ busy, blockedReason, serverErrors, onSubmit }: G
             fileName={icon?.file.name ?? null}
             fallbackLetter={([...values.appName.trim()].find((c) => /[\p{L}\p{N}]/u.test(c)) ?? "A").toUpperCase()}
             error={iconError ?? errorFor("icon")}
+            background={iconBackground}
+            onBackgroundChange={setIconBackground}
             onPick={onIconPick}
             onClear={() => {
               setIcon(null);
+              setIconBackground(null);
               setIconError(undefined);
             }}
           />

@@ -46,9 +46,13 @@ export async function validateIcon(buffer: Buffer): Promise<void> {
  * Builds every launcher icon resource: legacy square and round PNGs for each density, adaptive
  * icon foregrounds, the adaptive background colour and the adaptive-icon XML.
  */
-export async function buildLauncherIcons(upload: Buffer | null, appName: string): Promise<GeneratedFile[]> {
+export async function buildLauncherIcons(
+  upload: Buffer | null,
+  appName: string,
+  backgroundOverride: string | null = null,
+): Promise<GeneratedFile[]> {
   const source = upload
-    ? { png: await normalizePng(upload), background: await cornerColor(upload) }
+    ? { png: await normalizePng(upload), background: backgroundOverride ?? (await cornerColor(upload)) }
     : await monogram(appName);
 
   const files: GeneratedFile[] = [];
@@ -56,14 +60,19 @@ export async function buildLauncherIcons(upload: Buffer | null, appName: string)
   const circleMask = roundedMask(0.5);
 
   for (const [density, size] of Object.entries(LEGACY_SIZES)) {
-    const base = await sharp(source.png).resize(size, size, { fit: "cover" }).png().toBuffer();
+    let image = sharp(source.png).resize(size, size, { fit: "cover" });
+    // A chosen colour also fills transparent areas of the legacy icons.
+    if (upload && backgroundOverride) image = image.flatten({ background: backgroundOverride });
+    const base = await image.png().toBuffer();
     files.push({ path: `mipmap-${density}/ic_launcher.png`, content: await mask(base, size, squareMask) });
     files.push({ path: `mipmap-${density}/ic_launcher_round.png`, content: await mask(base, size, circleMask) });
   }
 
   for (const [density, size] of Object.entries(ADAPTIVE_SIZES)) {
-    // The adaptive mask shows the centre 72/108 of the canvas; keep the artwork inside that.
-    const inner = Math.round(size * (66 / 108));
+    // The adaptive mask shows the centre 72/108 of the canvas. An upload is drawn slightly larger than
+    // that window so no background colour rim shows inside the mask; the generated monogram stays
+    // inside the 66/108 safe zone.
+    const inner = Math.round(size * ((upload ? 76 : 66) / 108));
     const artwork = await sharp(source.png).resize(inner, inner, { fit: "cover" }).png().toBuffer();
     const canvas = await sharp({
       create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
@@ -82,6 +91,16 @@ export async function buildLauncherIcons(upload: Buffer | null, appName: string)
   files.push({ path: "mipmap-anydpi-v26/ic_launcher.xml", content: adaptive });
   files.push({ path: "mipmap-anydpi-v26/ic_launcher_round.xml", content: adaptive });
   return files;
+}
+
+/** Accepts "#RRGGBB" only; returns it upper-cased, or null when absent. Throws a field error otherwise. */
+export function parseIconBackground(value: unknown): string | null {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value !== "string" || !/^#[0-9a-fA-F]{6}$/.test(value)) {
+    const message = "The icon background must be a colour like #1A2B3C.";
+    throw new UserInputError(message, 400, { iconBackground: message });
+  }
+  return value.toUpperCase();
 }
 
 /** Re-encodes the upload (drops metadata, forces RGBA) so only pixel data reaches the build. */

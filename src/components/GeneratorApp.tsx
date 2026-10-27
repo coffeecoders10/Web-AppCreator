@@ -76,13 +76,13 @@ export function GeneratorApp() {
     };
   }, [jobId]);
 
-  const handleSubmit = async ({ config, icon }: FormSubmission) => {
+  const handleSubmit = async ({ config, icon, iconBackground }: FormSubmission) => {
     setServerErrors({});
     setProblem(null);
     setJob(null);
     setStarting(true);
     try {
-      const { id } = await startBuild(JSON.stringify(config), icon);
+      const { id } = await startBuild(JSON.stringify(config), icon, iconBackground);
       setJobId(id);
     } catch (error) {
       if (error instanceof ApiRequestError) {

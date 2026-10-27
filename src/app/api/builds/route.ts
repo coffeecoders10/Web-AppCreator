@@ -4,7 +4,7 @@ import { getBuildManager } from "@/lib/build-manager";
 import { validateConfig } from "@/lib/config";
 import { detectEnvironment } from "@/lib/environment";
 import { UserInputError } from "@/lib/file-utils";
-import { MAX_ICON_BYTES, validateIcon } from "@/lib/icon";
+import { MAX_ICON_BYTES, parseIconBackground, validateIcon } from "@/lib/icon";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,6 +57,8 @@ export async function POST(request: Request) {
       await validateIcon(iconPng);
     }
 
+    const iconBackground = parseIconBackground(form.get("iconBackground"));
+
     // Fail early, with actionable hints, instead of queueing a build that cannot succeed.
     const environment = await detectEnvironment();
     if (!environment.ready) {
@@ -69,7 +71,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const id = await getBuildManager().enqueue(result.config, iconPng);
+    const id = await getBuildManager().enqueue(result.config, iconPng, iconBackground);
     return json({ id }, 202);
   } catch (error) {
     return errorResponse(error);
